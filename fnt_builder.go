@@ -3,8 +3,8 @@ package fraudnettelemetry
 import (
 	"sync"
 
-	"github.com/CSTCryst/fraudnettelemetry/internal"
-	"github.com/CSTCryst/fraudnettelemetry/internal/fnt"
+	"pp_v3/pkg/fraudnettelemetry/internal"
+	"pp_v3/pkg/fraudnettelemetry/internal/fnt"
 )
 
 type (
@@ -13,7 +13,7 @@ type (
 	}
 	v0_1_9 struct{}
 	v2_0_1 struct{}
-	v2_0_2 struct{}
+	v2_0_4 struct{}
 )
 
 var (
@@ -24,7 +24,7 @@ var (
 	}
 	V0_1_9 v0_1_9
 	V2_0_1 v2_0_1
-	V2_0_2 v2_0_2
+	V2_0_4 v2_0_4
 )
 
 func (v0_1_9) String() string {
@@ -35,26 +35,31 @@ func (v2_0_1) String() string {
 	return "2.0.1"
 }
 
-func (v2_0_2) String() string {
-	return "2.0.2"
+func (v2_0_4) String() string {
+	return "2.0.4"
 }
 
 type fntBuilder struct {
-	d          map[string]string
-	dKeys      []string
-	scVersion  string
-	syncStatus string
-	f          string
-	s          string
-	dc         string
-	chk        *fnt.Chk
+	d                    map[string]string
+	dKeys                []string
+	scVersion            string
+	syncStatus           string
+	f                    string
+	s                    string
+	dc                   string
+	wv                   bool
+	web_integration_type string
+	cookie_enabled       bool
+	chk                  *fnt.Chk
 }
 
 func newFNT(builder *fntBuilder) fnt.IFNT {
 	if builder == nil {
 		return nil
 	}
+
 	m := fnt.NewFNTBaseBuilder()
+
 	m.SCVersion = builder.scVersion
 	m.SyncStatus = builder.syncStatus
 	m.F = builder.f
@@ -62,6 +67,10 @@ func newFNT(builder *fntBuilder) fnt.IFNT {
 	*m.Chk = *builder.chk
 	m.DC = builder.dc
 	m.D = builder.d
+	m.WV = builder.wv                                   // Set wv from builder
+	m.WebIntegrationType = builder.web_integration_type // Set web_integration_type from builder
+	m.CookieEnabled = builder.cookie_enabled            // Set cookie_enabled from builder
+
 	return m
 }
 
@@ -82,9 +91,9 @@ func (v2_0_1) NewFNTBuilder() *fntBuilder {
 }
 
 // Creates a new fntBuilder struct instance in sync.Pool
-func (v2_0_2) NewFNTBuilder() *fntBuilder {
+func (v2_0_4) NewFNTBuilder() *fntBuilder {
 	obj := fntBuilderPool.Get().(*fntBuilder)
-	obj.scVersion = "2.0.2"
+	obj.scVersion = "2.0.4"
 	obj.chk = fnt.NewChkBuilder()
 	return obj
 }
@@ -92,7 +101,7 @@ func (v2_0_2) NewFNTBuilder() *fntBuilder {
 // Check wether if version is supported or not
 func validateVersion(version Version) error {
 	switch version.String() {
-	case "0.1.9", "2.0.1", "2.0.2":
+	case "0.1.9", "2.0.1", "2.0.4":
 		return nil
 	default:
 		return internal.UndefinedVersionError(version.String())
@@ -233,34 +242,74 @@ func (m *fntBuilder) SetD(inputArr []string, extractKeys bool) (*fntBuilder, []s
 	return out, keys, nil
 }
 
+// Set wv field
+func (m *fntBuilder) SetWV(wv bool) *fntBuilder {
+	if m == nil {
+		return nil
+	}
+	m.wv = wv
+	return m
+}
+
+// Set web_integration_type field
+func (m *fntBuilder) SetWebIntegrationType(integrationType string) *fntBuilder {
+	if m == nil {
+		return nil
+	}
+	m.web_integration_type = integrationType
+	return m
+}
+
+// Set cookie_enabled field
+func (m *fntBuilder) SetCookieEnabled(enabled bool) *fntBuilder {
+	if m == nil {
+		return nil
+	}
+	m.cookie_enabled = enabled
+	return m
+}
+
 func (m *fntBuilder) Generate(inputArr, sourceIdArr []string, fnSessionId, userAgent string, urlEncode bool) ([]string, error) {
 	if m == nil {
 		return nil, internal.NullStructError("fntBuilder")
 	}
+
 	inputArrLen, sourceIdArrLen := len(inputArr), len(sourceIdArr)
 	if inputArr == nil || sourceIdArr == nil || inputArrLen == 0 || sourceIdArrLen == 0 || fnSessionId == "" || userAgent == "" {
 		return nil, internal.EmptyOrInvalidInputError("Generate")
 	}
+
 	var (
 		dKeys []string = make([]string, 0, inputArrLen)
 		err   error    = nil
 	)
+
+	// Set additional fields here
+	m.SetWV(true).
+		SetWebIntegrationType("WEB_REDIRECT").
+		SetCookieEnabled(false)
+
 	if _, err = m.SetSyncStatus(); err != nil {
 		return nil, err
 	}
+
 	if _, err = m.SetF(fnSessionId).SetDC(userAgent); err != nil {
 		return nil, err
 	}
+
 	if _, err = m.SetChk(); err != nil {
 		return nil, err
 	}
+
 	if _, dKeys, err = m.SetD(inputArr, true); err != nil {
 		return nil, err
 	}
+
 	dCopy := make(map[string]string, inputArrLen)
 	for i := 0; i < inputArrLen; i++ {
 		dCopy[dKeys[i]] = m.d[dKeys[i]]
 	}
+
 	output := make([]string, sourceIdArrLen)
 	for i, sourceIdLen := 0, sourceIdArrLen; i < sourceIdLen; i++ {
 		m.SetS(sourceIdArr[i])
@@ -272,6 +321,7 @@ func (m *fntBuilder) Generate(inputArr, sourceIdArr []string, fnSessionId, userA
 			return nil, err
 		}
 	}
+
 	return output, nil
 }
 
