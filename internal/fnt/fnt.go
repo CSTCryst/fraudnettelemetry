@@ -22,13 +22,16 @@ type IFNT interface {
 }
 
 type fntBase struct {
-	SCVersion  string            `json:"SC_VERSION"`
-	SyncStatus string            `json:"syncStatus"`
-	F          string            `json:"f"`
-	S          string            `json:"s"`
-	Chk        *Chk              `json:"chk"`
-	DC         string            `json:"dc"`
-	D          map[string]string `json:"d"`
+	SCVersion          string            `json:"SC_VERSION"`
+	SyncStatus         string            `json:"syncStatus"`
+	F                  string            `json:"f"`
+	S                  string            `json:"s"`
+	Chk                *Chk              `json:"chk"`
+	DC                 string            `json:"dc"`
+	WV                 bool              `json:"wv"`
+	WebIntegrationType string            `json:"web_integration_type"`
+	CookieEnabled      bool              `json:"cookie_enabled"`
+	D                  map[string]string `json:"d"`
 }
 
 func NewFNTBaseBuilder() *fntBase {
@@ -51,7 +54,7 @@ func (m *fntBase) String(urlEncode bool) (string, error) {
 			return rfc3986.QueryEscape(data), nil
 		}
 		return data, nil
-	case "2.0.2":
+	case "2.0.4":
 		data, err := json.MarshalToString(&m)
 		if err != nil {
 			return "", err
