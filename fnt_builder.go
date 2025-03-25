@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/CSTCryst/fraudnettelemetry/internal"
-	"github.com/CSTCryst/fraudnettelemetry/fnt"
+	"github.com/CSTCryst/fraudnettelemetry/internal/fnt"
 )
 
 type (
