@@ -3,8 +3,8 @@ package fraudnettelemetry
 import (
 	"sync"
 
-	"pp_v3/pkg/fraudnettelemetry/internal"
-	"pp_v3/pkg/fraudnettelemetry/internal/fnt"
+	"github.com/CSTCryst/fraudnettelemetry/internal"
+	"github.com/CSTCryst/fraudnettelemetry/fnt"
 )
 
 type (
