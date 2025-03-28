@@ -362,3 +362,24 @@ func (m *fntBuilder) Reset(put bool) {
 		fntBuilderPool.Put(m)
 	}
 }
+
+func (v v0_1_9) GenerateTelemetry(inputData, sourceIDData []string, fnSessionID, userAgent string, urlEncode bool) ([]string, error) {
+	builder := v.NewFNTBuilder()
+	defer builder.Reset(true)
+
+	return builder.Generate(inputData, sourceIDData, fnSessionID, userAgent, urlEncode)
+}
+
+func (v v2_0_1) GenerateTelemetry(inputData, sourceIDData []string, fnSessionID, userAgent string, urlEncode bool) ([]string, error) {
+	builder := v.NewFNTBuilder()
+	defer builder.Reset(true)
+
+	return builder.Generate(inputData, sourceIDData, fnSessionID, userAgent, urlEncode)
+}
+
+func (v v2_0_4) GenerateTelemetry(inputData, sourceIDData []string, fnSessionID, userAgent string, urlEncode bool) ([]string, error) {
+	builder := v.NewFNTBuilder()
+	defer builder.Reset(true)
+
+	return builder.Generate(inputData, sourceIDData, fnSessionID, userAgent, urlEncode)
+}
